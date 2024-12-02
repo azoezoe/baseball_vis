@@ -3,7 +3,7 @@ const margin = { top: 40, right: 40, bottom: 40, left: 200 };
 const width = 1200 - margin.left - margin.right;
 const height = 3000 - margin.top - margin.bottom;  // 高度可依據資料量調整
 
-d3.json('data/games.json').then(function(rawData) {
+d3.json('./data/games.json').then(function(rawData) {
     // 資料處理
     const processData = () => {
         let players = {};
