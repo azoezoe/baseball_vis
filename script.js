@@ -71,17 +71,20 @@ d3.json('./data/games.json').then(function(rawData) {
 function updateSort(sortType) {
     currentSort = sortType;
 
-    const getSortValue = (value) => (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
+    const getSortValue = (value) => {
+        // 如果值是數字且不為 NaN，則返回該值，否則返回 Infinity 使其排在最後
+        return (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
+    };
 
     players.sort((a, b) => {
-        switch(sortType) {
+        switch (sortType) {
             case 'birth':
-                return getSortValue(a.birthYear) - getSortValue(b.birthYear);
+                return getSortValue(Number(a.birthYear)) - getSortValue(Number(b.birthYear));
             case 'debut':
-                return getSortValue(a.debutYear) - getSortValue(b.debutYear);
+                return getSortValue(Number(a.debutYear)) - getSortValue(Number(b.debutYear));
             default:
                 if (a.firstYear !== b.firstYear) {
-                    return getSortValue(a.firstYear) - getSortValue(b.firstYear);
+                    return getSortValue(Number(a.firstYear)) - getSortValue(Number(b.firstYear));
                 }
                 const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
                 const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
@@ -90,9 +93,10 @@ function updateSort(sortType) {
     });
 
     yScale.domain(players.map(d => getLabel(d)));
-    
+
     updateVisualization();
 }
+
 
 
     function updateVisualization() {
