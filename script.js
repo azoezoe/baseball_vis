@@ -68,157 +68,135 @@ d3.json('./data/games.json').then(function(rawData) {
         .range([0, height])
         .padding(1);
 
+    updateSort('firstGame');
+});
+
+// 新增 adjustSVGHeight 函數
+function adjustSVGHeight() {
+    const height = players.length * 30;
+    d3.select('#visualization svg')
+        .attr('height', height + margin.top + margin.bottom);
+
+    yScale.range([0, height]);
+}
+
+// 更新 updateSort 函數
 function updateSort(sortType) {
     currentSort = sortType;
 
+    // 函數：檢查是否為有效的年份
     const getSortValue = (value) => {
-        // 如果值是數字且不為 NaN，則返回該值，否則返回 Infinity 使其排在最後
-        return (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
+        if (typeof value === 'number' && !isNaN(value)) {
+            return value;
+        } else if (typeof value === 'string' && value.trim() !== '') {
+            // 嘗試將有效的字串轉換為數字
+            const numValue = Number(value);
+            return isNaN(numValue) ? Infinity : numValue;
+        } else {
+            // 對於空白、undefined、NaN 的情況返回 Infinity
+            return Infinity;
+        }
     };
 
+    // 排序邏輯
     players.sort((a, b) => {
         switch (sortType) {
             case 'birth':
-                return getSortValue(Number(a.birthYear)) - getSortValue(Number(b.birthYear));
+                return getSortValue(a.birthYear) - getSortValue(b.birthYear);
             case 'debut':
-                return getSortValue(Number(a.debutYear)) - getSortValue(Number(b.debutYear));
+                return getSortValue(a.debutYear) - getSortValue(b.debutYear);
             default:
                 if (a.firstYear !== b.firstYear) {
-                    return getSortValue(Number(a.firstYear)) - getSortValue(Number(b.firstYear));
+                    return getSortValue(a.firstYear) - getSortValue(b.firstYear);
                 }
+                // 判斷一軍的先後順序
                 const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
                 const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
                 return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
         }
     });
 
+    // 更新 y 軸標籤
     yScale.domain(players.map(d => getLabel(d)));
 
+    // 更新圖表
     updateVisualization();
 }
 
+// 更新 updateVisualization 函數
+function updateVisualization() {
+    adjustSVGHeight(); // 每次更新視覺化時都重新調整高度
 
+    const height = players.length * 30;
 
-    function updateVisualization() {
-        const xAxis = svg.selectAll('g.x-axis')
-            .data(xScale.ticks())
-            .join('g')
-            .attr('class', 'x-axis')
-            .attr('transform', d => `translate(${xScale(d)},0)`);
+    const xAxis = svg.selectAll('g.x-axis')
+        .data(xScale.ticks())
+        .join('g')
+        .attr('class', 'x-axis')
+        .attr('transform', d => `translate(${xScale(d)},0)`);
 
-        xAxis.selectAll('line')
-            .data(d => [d])
-            .join('line')
-            .attr('y2', height)
-            .attr('stroke', '#e5e7eb')
-            .attr('stroke-dasharray', '4,4');
+    xAxis.selectAll('line')
+        .data(d => [d])
+        .join(
+            enter => enter.append('line')
+                .attr('y2', height)
+                .attr('stroke', '#e5e7eb')
+                .attr('stroke-dasharray', '4,4'),
+            update => update,
+            exit => exit.remove()
+        );
 
-        xAxis.selectAll('text')
-            .data(d => [d])
-            .join('text')
-            .attr('y', -10)
-            .attr('text-anchor', 'middle')
-            .attr('class', 'text-sm')
-            .attr('fill', '#666')
-            .text(d => d);
+    xAxis.selectAll('text')
+        .data(d => [d])
+        .join(
+            enter => enter.append('text')
+                .attr('y', -10)
+                .attr('text-anchor', 'middle')
+                .attr('class', 'text-sm')
+                .attr('fill', '#666')
+                .text(d => d),
+            update => update,
+            exit => exit.remove()
+        );
 
-        const playerGroups = svg.selectAll('g.player')
-            .data(players, d => d.name)
-            .join('g')
-            .attr('class', 'player');
+    const playerGroups = svg.selectAll('g.player')
+        .data(players, d => d.name)
+        .join('g')
+        .attr('class', 'player');
 
-        playerGroups.selectAll('text')
-            .data(d => [d])
-            .join('text')
-            .attr('x', -10)
-            .attr('y', d => yScale(getLabel(d)))
-            .attr('text-anchor', 'end')
-            .attr('dominant-baseline', 'middle')
-            .attr('class', 'text-sm')
-            .text(d => getLabel(d));
+    playerGroups.selectAll('text')
+        .data(d => [d])
+        .join(
+            enter => enter.append('text')
+                .attr('x', -10)
+                .attr('text-anchor', 'end')
+                .attr('dominant-baseline', 'middle')
+                .attr('class', 'text-sm'),
+            update => update,
+            exit => exit.remove()
+        )
+        .attr('y', d => yScale(getLabel(d)))
+        .text(d => getLabel(d));
 
-        playerGroups.selectAll('line')
-            .data(d => [d])
-            .join('line')
-            .attr('x1', 0)
-            .attr('x2', width)
-            .attr('y1', d => yScale(getLabel(d)))
-            .attr('y2', d => yScale(getLabel(d)))
-            .attr('stroke', '#e5e7eb')
-            .attr('stroke-width', 0.5);
-
-        playerGroups.each(function(player) {
-            d3.select(this)
-                .selectAll('circle')
-                .data(player.games)
-                .join('circle')
-                .transition()
-                .duration(500)
-                .attr('cx', d => xScale(d.year))
-                .attr('cy', d => yScale(getLabel(player)))
-                .attr('r', d => metricScales[currentMetric].scale(d[currentMetric]))
-                .attr('fill', d => d.level === "一軍" ? "#60a5fa" : "#f87171")
-                .attr('opacity', 0.6);
-        });
-    }
-
-    const legend = svg.append('g')
-        .attr('transform', `translate(${width - 150}, ${-30})`);
-
-    legend.append('circle')
-        .attr('cx', 0)
-        .attr('cy', 0)
-        .attr('r', 6)
-        .attr('fill', '#60a5fa')
-        .attr('opacity', 0.6);
-
-    legend.append('text')
-        .attr('x', 15)
-        .attr('y', 0)
-        .attr('dominant-baseline', 'middle')
-        .attr('class', 'text-sm')
-        .text('一軍');
-
-    legend.append('circle')
-        .attr('cx', 70)
-        .attr('cy', 0)
-        .attr('r', 6)
-        .attr('fill', '#f87171')
-        .attr('opacity', 0.6);
-
-    legend.append('text')
-        .attr('x', 85)
-        .attr('y', 0)
-        .attr('dominant-baseline', 'middle')
-        .attr('class', 'text-sm')
-        .text('二軍');
-
-    d3.selectAll('.tab').on('click', function() {
-        d3.selectAll('.tab').classed('active', false);
-        d3.select(this).classed('active', true);
-        currentMetric = this.dataset.metric;
-        updateVisualization();
+    playerGroups.each(function(player) {
+        d3.select(this)
+            .selectAll('circle')
+            .data(player.games)
+            .join(
+                enter => enter.append('circle')
+                    .attr('opacity', 0.6),
+                update => update.transition().duration(500),
+                exit => exit.remove()
+            )
+            .attr('cx', d => xScale(d.year))
+            .attr('cy', d => yScale(getLabel(player)))
+            .attr('r', d => metricScales[currentMetric].scale(d[currentMetric]))
+            .attr('fill', d => d.level === "一軍" ? "#60a5fa" : "#f87171");
     });
-
-    d3.selectAll('.sort').on('click', function() {
-        d3.selectAll('.sort').classed('active', false);
-        d3.select(this).classed('active', true);
-        updateSort(this.dataset.sort);
-    });
-
-    updateSort('firstGame');
-
-    const zoom = d3.zoom()
-        .scaleExtent([0.5, 5])
-        .on('zoom', (event) => {
-            svg.attr('transform', event.transform);
-        });
-
-    d3.select('svg').call(zoom);
-});
+}
 
 function getLabel(player) {
-    switch(currentSort) {
+    switch (currentSort) {
         case 'birth':
             return `${player.birthYear}年 ${player.name}`;
         case 'debut':
