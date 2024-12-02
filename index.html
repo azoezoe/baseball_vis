@@ -1,30 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
     <meta charset="utf-8">
-    <title>baseball taiwan</title>
+    <title>Baseball Taiwan</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-<div class="controls">
-    <div class="tabs">
-        <span>數值（圈圈大小）切換：</span>
-        <button class="tab active" data-metric="games">出賽數</button>
-        <button class="tab" data-metric="avg">打擊率</button>
-        <button class="tab" data-metric="runs">得分</button>
-        <button class="tab" data-metric="ops">整體攻擊指數</button>
-        <button class="tab" data-metric="obp">上壘率</button>
+    <div class="controls">
+        <div class="tabs">
+            <span>數值（圈圈大小）切換：</span>
+            <button class="tab active" data-metric="games">出賽數</button>
+            <button class="tab" data-metric="avg">打擊率</button>
+            <button class="tab" data-metric="runs">得分</button>
+            <button class="tab" data-metric="ops">整體攻擊指數</button>
+            <button class="tab" data-metric="obp">上壘率</button>
+        </div>
+        <div class="sort-options">
+            <span>排序切換：</span>
+            <button class="sort active" data-sort="firstGame">最早出賽</button>
+            <button class="sort" data-sort="birth">出生年</button>
+            <button class="sort" data-sort="debut">出道年</button>
+        </div>
     </div>
-    <div class="sort-options">
-        <span>排序切換：</span>
-        <button class="sort active" data-sort="firstGame">最早出賽</button>
-        <button class="sort" data-sort="birth">出生年</button>
-        <button class="sort" data-sort="debut">出道年</button>
-    </div>
-</div>
-    <div id="visualization" style="overflow-y: auto; max-height: 600px;"></div>
-    <!-- 將 script.js 移到 body 最後 -->
+    <div id="visualization"></div>
     <script src="script.js"></script>
 </body>
 </html>
