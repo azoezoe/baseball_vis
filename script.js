@@ -72,19 +72,27 @@ d3.json('./data/games.json').then(function(rawData) {
         currentSort = sortType;
 
         players.sort((a, b) => {
+            const getSortValue = (value) => (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
+            
             switch(sortType) {
                 case 'birth':
-                    return a.birthYear - b.birthYear;
-                case 'debut':
-                    return a.debutYear - b.debutYear;
-                default:
-                    if (a.firstYear !== b.firstYear) {
-                        return a.firstYear - b.firstYear;
+                    if (a.birthYear !== b.birthYear) {
+                        return getSortValue(a.birthYear) - getSortValue(b.birthYear);
                     }
-                    const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
-                    const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
-                    return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
+                    break;
+                case 'debut':
+                    if (a.debutYear !== b.debutYear) {
+                        return getSortValue(a.debutYear) - getSortValue(b.debutYear);
+                    }
+                    break;
             }
+            // 如果出生年或出道年相同，按照最早出賽排序邏輯
+            if (a.firstYear !== b.firstYear) {
+                return getSortValue(a.firstYear) - getSortValue(b.firstYear);
+            }
+            const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
+            const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
+            return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
         });
 
         yScale.domain(players.map(d => getLabel(d)));
