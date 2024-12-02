@@ -68,29 +68,32 @@ d3.json('./data/games.json').then(function(rawData) {
         .range([0, height])
         .padding(1);
 
-    function updateSort(sortType) {
-        currentSort = sortType;
-        
-        players.sort((a, b) => {
-            switch(sortType) {
-                case 'birth':
-                    return a.birthYear - b.birthYear;
-                case 'debut':
-                    return a.debutYear - b.debutYear;
-                default:
-                    if (a.firstYear !== b.firstYear) {
-                        return a.firstYear - b.firstYear;
-                    }
-                    const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
-                    const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
-                    return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
-            }
-        });
+function updateSort(sortType) {
+    currentSort = sortType;
 
-        yScale.domain(players.map(d => getLabel(d)));
-        
-        updateVisualization();
-    }
+    const getSortValue = (value) => (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
+
+    players.sort((a, b) => {
+        switch(sortType) {
+            case 'birth':
+                return getSortValue(a.birthYear) - getSortValue(b.birthYear);
+            case 'debut':
+                return getSortValue(a.debutYear) - getSortValue(b.debutYear);
+            default:
+                if (a.firstYear !== b.firstYear) {
+                    return getSortValue(a.firstYear) - getSortValue(b.firstYear);
+                }
+                const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
+                const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
+                return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
+        }
+    });
+
+    yScale.domain(players.map(d => getLabel(d)));
+    
+    updateVisualization();
+}
+
 
     function updateVisualization() {
         const xAxis = svg.selectAll('g.x-axis')
