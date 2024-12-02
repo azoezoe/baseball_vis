@@ -74,17 +74,17 @@ d3.json('./data/games.json').then(function(rawData) {
         players.sort((a, b) => {
             const getSortValue = (value) => (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
             
+            let result = 0;
             switch(sortType) {
                 case 'birth':
-                    if (a.birthYear !== b.birthYear) {
-                        return getSortValue(a.birthYear) - getSortValue(b.birthYear);
-                    }
+                    result = getSortValue(a.birthYear) - getSortValue(b.birthYear);
                     break;
                 case 'debut':
-                    if (a.debutYear !== b.debutYear) {
-                        return getSortValue(a.debutYear) - getSortValue(b.debutYear);
-                    }
+                    result = getSortValue(a.debutYear) - getSortValue(b.debutYear);
                     break;
+            }
+            if (result !== 0) {
+                return result;
             }
             // 如果出生年或出道年相同，按照最早出賽排序邏輯
             if (a.firstYear !== b.firstYear) {
