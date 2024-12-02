@@ -68,6 +68,10 @@ d3.json('./data/games.json').then(function(rawData) {
         .range([0, height])
         .padding(1);
 
+    // 在數據載入完成後再綁定按鈕事件
+    bindButtonEvents();
+
+    // 初始排序
     updateSort('firstGame');
 });
 
@@ -192,6 +196,22 @@ function updateVisualization() {
             .attr('cy', d => yScale(getLabel(player)))
             .attr('r', d => metricScales[currentMetric].scale(d[currentMetric]))
             .attr('fill', d => d.level === "一軍" ? "#60a5fa" : "#f87171");
+    });
+}
+
+// 新增 bindButtonEvents 函數來綁定按鈕事件
+function bindButtonEvents() {
+    d3.selectAll('.tab').on('click', function() {
+        d3.selectAll('.tab').classed('active', false);
+        d3.select(this).classed('active', true);
+        currentMetric = this.dataset.metric;
+        updateVisualization();
+    });
+
+    d3.selectAll('.sort').on('click', function() {
+        d3.selectAll('.sort').classed('active', false);
+        d3.select(this).classed('active', true);
+        updateSort(this.dataset.sort);
     });
 }
 
