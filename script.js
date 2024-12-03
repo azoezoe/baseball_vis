@@ -68,37 +68,43 @@ d3.json('./data/games.json').then(function(rawData) {
         .range([0, height])
         .padding(1);
 
-    function updateSort(sortType) {
-        currentSort = sortType;
+function updateSort(sortType) {
+    currentSort = sortType;
 
-        players.sort((a, b) => {
-            const getSortValue = (value) => (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
-            
-            let result = 0;
-            switch(sortType) {
-                case 'birth':
-                    result = getSortValue(a.birthYear) - getSortValue(b.birthYear);
-                    break;
-                case 'debut':
-                    result = getSortValue(a.debutYear) - getSortValue(b.debutYear);
-                    break;
-            }
-            if (result !== 0) {
-                return result;
-            }
-            // 如果出生年或出道年相同，按照最早出賽排序邏輯
-            if (a.firstYear !== b.firstYear) {
-                return getSortValue(a.firstYear) - getSortValue(b.firstYear);
-            }
-            const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
-            const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
-            return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
-        });
-
-        yScale.domain(players.map(d => getLabel(d)));
+    players.sort((a, b) => {
+        const getSortValue = (value) => (typeof value === 'number' && !isNaN(value)) ? value : Infinity;
         
-        updateVisualization();
-    }
+        let result = 0;
+        switch (sortType) {
+            case 'birth':
+                result = getSortValue(a.birthYear) - getSortValue(b.birthYear);
+                break;
+            case 'debut':
+                result = getSortValue(a.debutYear) - getSortValue(b.debutYear);
+                break;
+        }
+
+        // 如果結果非零，直接返回結果
+        if (result !== 0) {
+            return result;
+        }
+
+        // 如果出生年或出道年相同，按照最早出賽排序邏輯
+        if (a.firstYear !== b.firstYear) {
+            return getSortValue(a.firstYear) - getSortValue(b.firstYear);
+        }
+
+        // 如果最早出賽年也相同，根據是否 "一軍" 出賽進行排序
+        const aStartsInFirst = a.games.find(g => g.year === a.firstYear)?.level === "一軍";
+        const bStartsInFirst = b.games.find(g => g.year === b.firstYear)?.level === "一軍";
+        return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
+    });
+
+    yScale.domain(players.map(d => getLabel(d)));
+    
+    updateVisualization();
+}
+
 
     function updateVisualization() {
         const xAxis = svg.selectAll('g.x-axis')
