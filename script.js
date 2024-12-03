@@ -82,6 +82,9 @@ function updateSort(sortType) {
             case 'debut':
                 result = getSortValue(a.debutYear) - getSortValue(b.debutYear);
                 break;
+            case 'firstGame':
+                result = getSortValue(a.firstYear) - getSortValue(b.firstYear);
+                break;
         }
 
         // 如果結果非零，直接返回結果
@@ -100,9 +103,70 @@ function updateSort(sortType) {
         return (aStartsInFirst === bStartsInFirst) ? 0 : aStartsInFirst ? -1 : 1;
     });
 
+    // 更新 yScale 的 domain
     yScale.domain(players.map(d => getLabel(d)));
-    
+
+    // 更新可視化
     updateVisualization();
+}
+
+function updateVisualization() {
+    const playerGroups = svg.selectAll('g.player')
+        .data(players, d => d.name);
+
+    // 更新每個球員的 group
+    playerGroups.join(
+        enter => enter.append('g')
+            .attr('class', 'player')
+            .call(enter => {
+                enter.append('text')
+                    .attr('x', -10)
+                    .attr('text-anchor', 'end')
+                    .attr('dominant-baseline', 'middle')
+                    .attr('class', 'text-sm');
+
+                enter.append('line')
+                    .attr('x1', 0)
+                    .attr('x2', width)
+                    .attr('stroke', '#e5e7eb')
+                    .attr('stroke-width', 0.5);
+
+                enter.selectAll('circle')
+                    .data(d => d.games)
+                    .join('circle')
+                    .attr('fill', d => d.level === "一軍" ? "#60a5fa" : "#f87171")
+                    .attr('opacity', 0.6);
+            }),
+        update => update,
+        exit => exit.remove()
+    );
+
+    // 更新文字位置
+    playerGroups.select('text')
+        .transition()
+        .duration(500)
+        .attr('y', d => yScale(getLabel(d)))
+        .text(d => getLabel(d));
+
+    // 更新線條位置
+    playerGroups.select('line')
+        .transition()
+        .duration(500)
+        .attr('y1', d => yScale(getLabel(d)))
+        .attr('y2', d => yScale(getLabel(d)));
+
+    // 更新圓圈的位置
+    playerGroups.each(function(player) {
+        d3.select(this)
+            .selectAll('circle')
+            .data(player.games)
+            .join('circle')
+            .transition()
+            .duration(500)
+            .attr('cx', d => xScale(d.year))
+            .attr('cy', d => yScale(getLabel(player)))
+            .attr('r', d => metricScales[currentMetric].scale(d[currentMetric]));
+    });
 }
 
 
